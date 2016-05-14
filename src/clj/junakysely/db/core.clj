@@ -21,6 +21,7 @@
                     :min-idle   1
                     :max-idle   4
                     :max-active 32
+                    :driver-class-name "org.postgresql.Driver"
                     :jdbc-url   (env :database-url)})
           :stop (conman/disconnect! *db*))
 
