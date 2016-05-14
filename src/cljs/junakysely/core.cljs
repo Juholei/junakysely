@@ -9,50 +9,30 @@
             [ajax.core :refer [GET POST]])
   (:import goog.History))
 
-(defn nav-link [uri title page collapsed?]
-  [:li.nav-item
-   {:class (when (= page (session/get :page)) "active")}
-   [:a.nav-link
-    {:href uri
-     :on-click #(reset! collapsed? true)} title]])
-
-(defn navbar []
-  (let [collapsed? (r/atom true)]
+(defn- submit-comment! [state]
+  (POST "/api/comments"
+    {:params @state
+     :handler (fn [] (swap! state {:name "" :text ""}))}))
+     
+(defn comment-form []
+  (let [form-state (r/atom {:name "" :text ""})]
     (fn []
-      [:nav.navbar.navbar-light.bg-faded
-       [:button.navbar-toggler.hidden-sm-up
-        {:on-click #(swap! collapsed? not)} "☰"]
-       [:div.collapse.navbar-toggleable-xs
-        (when-not @collapsed? {:class "in"})
-        [:a.navbar-brand {:href "#/"} "junakysely"]
-        [:ul.nav.navbar-nav
-         [nav-link "#/" "Home" :home collapsed?]
-         [nav-link "#/about" "About" :about collapsed?]]]])))
-
-(defn about-page []
-  [:div.container
-   [:div.row
-    [:div.col-md-12
-     "this is the story of junakysely... work in progress"]]])
+      [:div.comment-form [:h1 "Millainen junakokemuksesi oli?"]
+                         [:form {:on-submit #(do (.preventDefault %) (.log js/console "JEE FORM SUBMIT") (submit-comment! form-state))}
+                                [:anti-forgery-field]
+                                [:input.text {:type "text"
+                                              :placeholder "Palautteesi"
+                                              :value (:text @form-state)
+                                              :on-change #(swap! form-state assoc :text (-> % .-target .-value))}]
+                                [:input {:type "submit" :value "Lähetä palaute"}]]])))
 
 (defn home-page []
   [:div.container
    [:div.jumbotron
-    [:h1 "Welcome to junakysely"]
-    [:p "Time to start building your site!"]
-    [:p [:a.btn.btn-primary.btn-lg {:href "http://luminusweb.net"} "Learn more »"]]]
-   [:div.row
-    [:div.col-md-12
-     [:h2 "Welcome to ClojureScript"]]]
-   (when-let [docs (session/get :docs)]
-     [:div.row
-      [:div.col-md-12
-       [:div {:dangerouslySetInnerHTML
-              {:__html (md->html docs)}}]]])])
+    [comment-form]]])
 
 (def pages
-  {:home #'home-page
-   :about #'about-page})
+  {:home #'home-page})
 
 (defn page []
   [(pages (session/get :page))])
@@ -84,7 +64,6 @@
   (GET (str js/context "/docs") {:handler #(session/put! :docs %)}))
 
 (defn mount-components []
-  (r/render [#'navbar] (.getElementById js/document "navbar"))
   (r/render [#'page] (.getElementById js/document "app")))
 
 (defn init! []

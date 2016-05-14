@@ -1,6 +1,6 @@
 (ns junakysely.routes.home
   (:require [junakysely.layout :as layout]
-            [compojure.core :refer [defroutes GET]]
+            [compojure.core :refer [defroutes GET POST]]
             [ring.util.http-response :as response]
             [clojure.java.io :as io]))
 
@@ -9,5 +9,5 @@
 
 (defroutes home-routes
   (GET "/" [] (home-page))
-  (GET "/docs" [] (response/ok (-> "docs/docs.md" io/resource slurp))))
+  (POST "/api/comments" [] "lol"))
 
