@@ -12,40 +12,50 @@
 (defn- submit-comment! [state]
   (POST "/api/comments"
     {:params @state
-     :handler (fn [] (swap! state {:name "" :text ""}))}))
+     :handler (fn []
+                (swap! state {:name "" :text ""})
+                (session/put! :page :thanks))}))
      
 (defn comment-form []
   (let [form-state (r/atom {:name "" :text ""})]
     (fn []
-      [:div.comment-form [:h1 "Millainen junakokemuksesi oli?"]
-                         [:form {:on-submit #(do (.preventDefault %) (.log js/console "JEE FORM SUBMIT") (submit-comment! form-state))}
-                                [:anti-forgery-field]
-                                [:input.text {:type "text"
-                                              :placeholder "Palautteesi"
-                                              :value (:text @form-state)
-                                              :on-change #(swap! form-state assoc :text (-> % .-target .-value))}]
-                                [:input {:type "submit" :value "Lähetä palaute"}]]])))
+      [:div.comment-form
+        [:h1 "Millainen kokemuksesi oli?"]
+        [:form {:on-submit #(do (.preventDefault %) (submit-comment! form-state))}
+               [:textarea {:rows 5
+                           :cols 30
+                           :placeholder "Palautteesi"
+                           :value (:text @form-state)
+                           :on-change #(swap! form-state assoc :text (-> % .-target .-value))}]
+               [:input.submitbutton {:type "submit" :value "Lähetä palaute"}]]])))
 
 (defn home-page []
   [:div.container
    [:div.jumbotron
     [comment-form]]])
 
+(defn thanks-page []
+  [:div.container
+   [:div.jumbotron
+    [:h1 "Kiitos palautteestasi"]
+    [:img {:src "/img/juna.gif"}]]])
+
 (def pages
-  {:home #'home-page})
+  {:home #'home-page
+   :thanks #'thanks-page})
 
 (defn page []
   [(pages (session/get :page))])
 
 ;; -------------------------
 ;; Routes
-(secretary/set-config! :prefix "#")
+;(secretary/set-config! :prefix "#")
 
 (secretary/defroute "/" []
   (session/put! :page :home))
 
-(secretary/defroute "/about" []
-  (session/put! :page :about))
+;(secretary/defroute "/thanks" []
+;  (session/put! :page :thanks))
 
 ;; -------------------------
 ;; History

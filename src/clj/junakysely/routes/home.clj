@@ -10,8 +10,8 @@
   (layout/render "home.html"))
 
 (defn save-comment [comment]
-    (log/info comment)
-    (db/create-comment! {:comment comment}))
+    (db/create-comment! {:comment comment})
+    "ok")
 
 (defroutes home-routes
   (GET "/" [] (home-page))
